@@ -245,6 +245,33 @@ header h1 {
     color: var(--text-secondary);
 }
 
+.sources-content a {
+    color: #93c5fd !important;
+    text-decoration: none;
+    border: 2px solid #60a5fa !important;
+    border-radius: 6px;
+    padding: 4px 8px;
+    background-color: rgba(96, 165, 250, 0.15) !important;
+    display: inline-block;
+    margin: 0 2px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sources-content a:hover {
+    color: #dbeafe !important;
+    border-color: #93c5fd !important;
+    background-color: rgba(96, 165, 250, 0.3) !important;
+    text-shadow: 0 0 12px rgba(96, 165, 250, 0.5);
+    transform: translateY(-1px);
+}
+
+.sources-content a:focus {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
 /* Markdown formatting styles */
 .message-content h1,
 .message-content h2,

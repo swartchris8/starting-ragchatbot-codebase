@@ -122,10 +122,26 @@ function addMessage(content, type, sources = null, isWelcome = false) {
     let html = `<div class="message-content">${displayContent}</div>`;
     
     if (sources && sources.length > 0) {
+        // Format sources - handle both old format (strings) and new format (objects with text/link)
+        const formattedSources = sources.map(source => {
+            if (typeof source === 'string') {
+                // Old format - just return the text
+                return source;
+            } else if (source && source.text) {
+                // New format - create clickable link if available
+                if (source.link) {
+                    return `<a href="${source.link}" target="_blank" rel="noopener noreferrer">${source.text}</a>`;
+                } else {
+                    return source.text;
+                }
+            }
+            return source; // fallback
+        }).join(', ');
+        
         html += `
             <details class="sources-collapsible">
                 <summary class="sources-header">Sources</summary>
-                <div class="sources-content">${sources.join(', ')}</div>
+                <div class="sources-content">${formattedSources}</div>
             </details>
         `;
     }
