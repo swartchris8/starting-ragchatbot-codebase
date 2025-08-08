@@ -111,3 +111,4 @@ ANTHROPIC_API_KEY=your_api_key_here
 - Loading states and error handling
 - Suggested questions for user guidance
 - always use uv to manage python packages, do not use pip directly
+- don't run the server using ./run.sh I will start it myself
