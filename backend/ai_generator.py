@@ -90,7 +90,10 @@ Provide only the direct answer to what was asked.
         if response.stop_reason == "tool_use" and tool_manager:
             return self._handle_tool_execution(response, api_params, tool_manager)
         
-        # Return direct response
+        # Return direct response - handle empty content gracefully
+        if not response.content:
+            return "I apologize, but I encountered an issue generating a response. Please try rephrasing your question."
+        
         return response.content[0].text
     
     def _handle_tool_execution(self, initial_response, base_params: Dict[str, Any], tool_manager):
@@ -139,4 +142,10 @@ Provide only the direct answer to what was asked.
         
         # Get final response
         final_response = self.client.messages.create(**final_params)
+        
+        # Handle empty content gracefully
+        if not final_response.content:
+            return "I apologize, but I encountered an issue generating a response. Please try rephrasing your question."
+        
+        # Return the first content block's text
         return final_response.content[0].text

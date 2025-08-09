@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_press_key",
+      "Bash(mkdir:*)"
+    ],
+    "deny": [
+      "Read(claude-history/**)",
+      "Read(sync-claude-history.sh)"
+    ]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash sync-claude-history.sh"
+          }
+        ]
+      }
+    ]
+  }
+  
+}

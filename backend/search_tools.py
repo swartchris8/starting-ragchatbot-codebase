@@ -63,11 +63,14 @@ class CourseSearchTool(Tool):
         """
         
         # Use the vector store's unified search interface
-        results = self.store.search(
-            query=query,
-            course_name=course_name,
-            lesson_number=lesson_number
-        )
+        try:
+            results = self.store.search(
+                query=query,
+                course_name=course_name,
+                lesson_number=lesson_number
+            )
+        except Exception as e:
+            return f"Search error: {str(e)}"
         
         # Handle errors
         if results.error:
@@ -83,7 +86,10 @@ class CourseSearchTool(Tool):
             return f"No relevant content found{filter_info}."
         
         # Format and return results
-        return self._format_results(results)
+        try:
+            return self._format_results(results)
+        except Exception as e:
+            return f"Error formatting search results: {str(e)}"
     
     def _format_results(self, results: SearchResults) -> str:
         """Format search results with course and lesson context"""
