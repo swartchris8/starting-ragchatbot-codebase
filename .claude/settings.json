@@ -10,7 +10,8 @@
     ],
     "deny": [
       "Read(claude-history/**)",
-      "Read(sync-claude-history.sh)"
+      "Read(sync-claude-history.sh)",
+      "Read(.env)"
     ]
   },
   "hooks": {
