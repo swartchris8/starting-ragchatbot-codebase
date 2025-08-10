@@ -20,6 +20,29 @@ cd backend && uv run uvicorn app:app --reload --port 8000
 uv sync
 ```
 
+**Code Quality Commands:**
+```bash
+# Format code automatically
+./scripts/format.sh
+
+# Run all quality checks
+./scripts/lint.sh
+
+# Run individual quality checks
+uv run black --check backend/ main.py        # Check formatting
+uv run isort --check-only backend/ main.py   # Check import sorting
+uv run flake8 backend/ main.py               # Lint code
+uv run mypy backend/ main.py                 # Type checking
+
+# Fix formatting issues
+uv run black backend/ main.py                # Auto-format with Black
+uv run isort backend/ main.py                # Auto-sort imports
+
+# Advanced quality script with options
+python scripts/quality_check.py --fix        # Run all checks and fix issues
+python scripts/quality_check.py --check black # Run only Black check
+```
+
 **Access points:**
 - Web Interface: `http://localhost:8000`
 - API Documentation: `http://localhost:8000/docs`
@@ -112,3 +135,4 @@ ANTHROPIC_API_KEY=your_api_key_here
 - Suggested questions for user guidance
 - always use uv to manage python packages, do not use pip directly
 - don't run the server using ./run.sh I will start it myself
+- use uv add to add requirements to pyproject.toml this way pyproject.toml and uv.lock will remain in sync, don't directly edit these files, instead use the relevant uv commands such as uv add
