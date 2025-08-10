@@ -136,3 +136,4 @@ ANTHROPIC_API_KEY=your_api_key_here
 - always use uv to manage python packages, do not use pip directly
 - don't run the server using ./run.sh I will start it myself
 - use uv add to add requirements to pyproject.toml this way pyproject.toml and uv.lock will remain in sync, don't directly edit these files, instead use the relevant uv commands such as uv add
+- claude-history i populated by another agent and it stores Claude Code chat history with a hook, DO NOT UPDATE, READ or do anything with claude-history and its contents, they are managed by another agent, you can always commit the claude-history files if they appear in the staged area don't worry about that

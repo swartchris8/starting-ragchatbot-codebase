@@ -56,3 +56,4 @@ The application will be available at:
 
 ### Sync Claude Code History with local ignored dir
 
+bash sync-claude-history.sh
