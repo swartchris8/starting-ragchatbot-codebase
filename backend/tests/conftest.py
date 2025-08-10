@@ -2,8 +2,13 @@ import os
 import shutil
 import sys
 import tempfile
+import asyncio
 from typing import Any, Dict, List
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, AsyncMock, patch
+from fastapi.testclient import TestClient
+import httpx
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 import pytest
 
@@ -165,3 +170,160 @@ def create_mock_chroma_results(
         "metadatas": [metadata],
         "distances": [[0.1] * len(documents)] if documents else [[]],
     }
+
+
+# API Testing Fixtures
+
+@pytest.fixture
+def mock_rag_system():
+    """Mock RAG system for API testing"""
+    mock_rag = Mock()
+    mock_rag.query.return_value = (
+        "This is a test response from the RAG system.",
+        [{"text": "Test source content", "link": "https://example.com/lesson1"}]
+    )
+    mock_rag.get_course_analytics.return_value = {
+        "total_courses": 2,
+        "course_titles": ["Introduction to Machine Learning", "Advanced AI Applications"]
+    }
+    mock_rag.session_manager = Mock()
+    mock_rag.session_manager.create_session.return_value = "test-session-123"
+    return mock_rag
+
+@pytest.fixture
+def test_app(mock_rag_system):
+    """Create a test FastAPI app without static file dependencies"""
+    from fastapi import FastAPI, HTTPException
+    from pydantic import BaseModel
+    from typing import List, Optional, Union, Dict
+    
+    app = FastAPI(title="Test Course Materials RAG System")
+    
+    # Add CORS middleware for testing
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    
+    # Pydantic models (copy from main app)
+    class QueryRequest(BaseModel):
+        query: str
+        session_id: Optional[str] = None
+
+    class QueryResponse(BaseModel):
+        answer: str
+        sources: List[Union[str, Dict[str, str]]]
+        session_id: str
+
+    class CourseStats(BaseModel):
+        total_courses: int
+        course_titles: List[str]
+    
+    # API endpoints with mocked RAG system
+    @app.post("/api/query", response_model=QueryResponse)
+    async def query_documents(request: QueryRequest):
+        try:
+            session_id = request.session_id or mock_rag_system.session_manager.create_session()
+            answer, sources = mock_rag_system.query(request.query, session_id)
+            return QueryResponse(
+                answer=answer,
+                sources=sources,
+                session_id=session_id
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @app.get("/api/courses", response_model=CourseStats)
+    async def get_course_stats():
+        try:
+            analytics = mock_rag_system.get_course_analytics()
+            return CourseStats(
+                total_courses=analytics["total_courses"],
+                course_titles=analytics["course_titles"]
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+    
+    @app.get("/")
+    async def root():
+        return {"message": "Course Materials RAG System API"}
+    
+    @app.get("/health")
+    async def health_check():
+        return {"status": "healthy", "service": "rag-system"}
+    
+    return app
+
+@pytest.fixture
+def client(test_app):
+    """Test client for API endpoints"""
+    return TestClient(test_app)
+
+@pytest.fixture
+async def async_client(test_app):
+    """Async test client for API endpoints"""
+    from httpx import ASGITransport
+    async with httpx.AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as ac:
+        yield ac
+
+@pytest.fixture
+def sample_query_request():
+    """Sample query request payload"""
+    return {
+        "query": "What is machine learning?",
+        "session_id": None
+    }
+
+@pytest.fixture  
+def sample_query_request_with_session():
+    """Sample query request with session ID"""
+    return {
+        "query": "Tell me more about that topic",
+        "session_id": "test-session-123"
+    }
+
+@pytest.fixture
+def invalid_query_request():
+    """Invalid query request for error testing"""
+    return {
+        "query": "",  # Empty query
+        "session_id": "invalid-session"
+    }
+
+@pytest.fixture
+def expected_query_response():
+    """Expected structure of query response"""
+    return {
+        "answer": str,
+        "sources": list,
+        "session_id": str
+    }
+
+@pytest.fixture
+def expected_course_stats():
+    """Expected structure of course stats response"""
+    return {
+        "total_courses": int,
+        "course_titles": list
+    }
+
+@pytest.fixture
+def mock_rag_system_error():
+    """Mock RAG system that raises errors for testing"""
+    mock_rag = Mock()
+    mock_rag.query.side_effect = Exception("RAG system error")
+    mock_rag.get_course_analytics.side_effect = Exception("Analytics error")
+    return mock_rag
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for the test session."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
